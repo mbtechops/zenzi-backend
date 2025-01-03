@@ -1,10 +1,10 @@
 // This is your test secret API key.
-const stripe = require('stripe')('sk_test_51QX9dwFbyvNcqpBdOggN6sH8EitYLNHW74rNIyNpzt1NsNSId8t7QO0ggG9sULoc82A4VGZhPRTqIcnYOKAzR28D00lgts71lS');
+const stripe = require('stripe')('sk_test_***');
 // Replace this endpoint secret with your endpoint's unique secret
 // If you are testing with the CLI, find the secret by running 'stripe listen'
 // If you are using an endpoint defined with the API or dashboard, look in your webhook settings
 // at https://dashboard.stripe.com/webhooks
-const endpointSecret = 'whsec_jNx8mjJS9pPiXdHqNWTWiJZ3exjDqTlu'; //todo: This will be replaced by endpoint secret key from stripe dashboard
+const endpointSecret = 'whsec_***'; //todo: This will be replaced by endpoint secret key from stripe dashboard
 const express = require('express');
 const app = express();
 // https://e174-2c0f-f5c0-707-d73b-c28d-90b-6986-4.ngrok-free.app
