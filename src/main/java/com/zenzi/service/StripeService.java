@@ -23,7 +23,7 @@ import java.util.UUID;
 
 @Slf4j
 @Service
-public class StripeService {
+public class StripeService implements IStripeService {
 //
 //    @Value("${stripe.secretKey}")
 //    private String secretKey;
@@ -69,7 +69,7 @@ public class StripeService {
 
         } catch (StripeException e) {
 
-            log.error("StripeException occurred: {}", e.getMessage(), e);
+            log.error("StripeException occurred: {}", e.getMessage());
 
             return StripeResponse.builder()
                     .status(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR))
@@ -146,23 +146,6 @@ public class StripeService {
             case "charge.captured" -> {
                 if (stripeObject instanceof Charge charge) {
                     log.info("Charge Captured Object: {}", charge.getObject());
-
-
-                    /*amount
-                    amount_captured
-                    * billing_details{address{country}, email, name, phone}
-                    captured
-                    currency
-                    outcome{seller_message}
-                    paid
-                    card {amount_authorized, brand, country}
-                    type
-                    receipt_url
-                    status
-
-
-                    * */
-
                 } else {
                     failedToDeserialized(eventId);
                 }
@@ -245,7 +228,7 @@ public class StripeService {
         log.error("Failed to deserialize Customer object for event ID: {}", eventId);
     }
 
-    public String getRequestBodyAsString(HttpServletRequest request) throws IOException {
+    private String getRequestBodyAsString(HttpServletRequest request) throws IOException {
         StringBuilder stringBuilder = new StringBuilder();
         String line;
 
