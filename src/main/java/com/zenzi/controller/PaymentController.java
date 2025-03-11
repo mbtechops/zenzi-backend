@@ -43,7 +43,7 @@ public class PaymentController {
     }
 
 
-    @PostMapping("/webhook")
+    @PostMapping("/stripe-webhook")
     @Operation(summary = "Listen For Events", description = "Endpoint to listen for events from Stripe")
     public ResponseEntity<String> handleStripeWebhook(
             HttpServletRequest request

@@ -5,6 +5,7 @@
       <option name="customHeaders">
         <set>
           <option value="Stripe-Signature" />
+          <option value="x-paystack-signature" />
         </set>
       </option>
     </inspection_tool>
