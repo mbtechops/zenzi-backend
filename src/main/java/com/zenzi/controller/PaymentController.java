@@ -1,8 +1,8 @@
 package com.zenzi.controller;
 
-import com.zenzi.dto.BalanceDTO;
-import com.zenzi.dto.ProductRequest;
-import com.zenzi.dto.StripeResponse;
+import com.zenzi.dto.response.BalanceDTO;
+import com.zenzi.dto.request.ProductRequest;
+import com.zenzi.dto.response.StripeResponse;
 import com.zenzi.service.IStripeService;
 import com.stripe.exception.EventDataObjectDeserializationException;
 import com.stripe.exception.StripeException;

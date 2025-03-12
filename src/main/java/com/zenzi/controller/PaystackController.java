@@ -1,7 +1,6 @@
 package com.zenzi.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.zenzi.dto.*;
+import com.zenzi.dto.response.paystack.*;
 import com.zenzi.service.PaystackService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -12,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.util.List;
 
 @Slf4j
 @RestController
@@ -23,44 +21,40 @@ public class PaystackController {
 
     private final PaystackService paystackService;
 
-    @PostMapping("/createRecipient")
+    //    @PostMapping("/createRecipient") NO LONGER NEEDED
     @Operation(summary = "Create Recipient")
-    public ResponseEntity<RecipientDTO> createRecipient(
+    public ResponseEntity<TransferRecipientResponse> createRecipient(
             @RequestParam String name,
             @RequestParam String accountNumber,
             @RequestParam String bankCode,
             @RequestParam String currency
-    ) throws IOException {
-
-        String stringRecipient = paystackService.createRecipient(name, accountNumber, bankCode, currency);
-
-        ObjectMapper mapper = new ObjectMapper();
-        RecipientResponse recipient = mapper.readValue(stringRecipient, RecipientResponse.class);
-
-
+    ) {
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(recipient.getData());
+                .body(paystackService.createRecipient(name, accountNumber, bankCode, currency));
     }
 
     @PostMapping("/initiate-payout")
     @Operation(summary = "Initiate payout")
     public ResponseEntity<TransferResponse> initiatePayout(
+            @RequestParam String name,
+            @RequestParam String accountNumber,
+            @RequestParam String bankCode,
+            @RequestParam String currency,
             @RequestParam double amount,
-            @RequestParam String recipientCode,
             @RequestParam String reason) {
 
-        TransferResponse int_payOut = paystackService.initiatePayout(amount, recipientCode, reason);
+        TransferResponse int_payOut = paystackService.initiatePayout(name, accountNumber, bankCode, currency, amount, reason);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(int_payOut);
     }
 
-    @PostMapping("/finalize_payout")
-    public ResponseEntity<String> finalizePayout(
+    //    @PostMapping("/finalize_payout") NO LONGER NEEDED
+    public ResponseEntity<FinalizePayoutResponse> finalizePayout(
             @RequestParam String transferCode,
             @RequestParam String otp) throws IOException {
-        String response = paystackService.finalizePayout(transferCode, otp); //otp in the test domain is 123456
+        FinalizePayoutResponse response = paystackService.finalizePayout(transferCode, otp); //otp in the test domain is 123456
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -68,16 +62,16 @@ public class PaystackController {
     }
 
     @GetMapping("/verify-payout")
-    public ResponseEntity<String> verifyPayout(@RequestParam String transferIdOrCode) throws IOException {
-        String verifyPayOut = paystackService.verifyPayout(transferIdOrCode);
+    public ResponseEntity<VerifyPaymentResponse> verifyPayout(@RequestParam String transferIdOrCode) throws IOException {
+        VerifyPaymentResponse verifyPayOut = paystackService.verifyPayout(transferIdOrCode);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(verifyPayOut);
     }
 
     @GetMapping("/get_balance")
-    public ResponseEntity<String> checkBalance() throws IOException {
-        String response = paystackService.checkBalance();
+    public ResponseEntity<BalanceResponse> checkBalance() throws IOException {
+        BalanceResponse response = paystackService.checkBalance();
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(response);
@@ -85,9 +79,9 @@ public class PaystackController {
 
     @PostMapping("/initialize_payment")
     @Operation(summary = "Initialize payment")
-    public ResponseEntity<String> initializeTransaction(
+    public ResponseEntity<TransactionResponse> initializeTransaction(
             @RequestParam double amount, @RequestParam String email) throws IOException {
-        String stripeResponse = paystackService.initiatePayment(amount, email);
+        TransactionResponse stripeResponse = paystackService.initiatePayment(amount, email);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(stripeResponse);
@@ -95,45 +89,32 @@ public class PaystackController {
 
     @GetMapping("/verify_payment")
     @Operation(summary = "Verify payment")
-    public ResponseEntity<String> verifyTransaction(@RequestParam String reference) throws IOException {
-        String stripeResponse = paystackService.verifyPayment(reference);
+    public ResponseEntity<VerifyPaymentResponse> verifyTransaction(@RequestParam String reference) throws IOException {
+        VerifyPaymentResponse stripeResponse = paystackService.verifyPayment(reference);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(stripeResponse);
     }
 
-    @PostMapping("/webhook")
-    @Operation(summary = "Webhook to listen to Paystack events")
-    public ResponseEntity<String> handleWebhook(@RequestBody String payload, @RequestHeader("x-paystack-signature") String signature) {
-        boolean isValid = paystackService.verifySignature(payload, signature);
-
-        if (isValid) {
-            System.out.println("Webhook received: " + payload);
-            return ResponseEntity
-                    .status(HttpStatus.OK)
-                    .body("Webhook processed successfully");
-        } else {
-            return ResponseEntity
-                    .status(HttpStatus.OK)
-                    .body("Invalid webhook signature");
-        }
-    }
-
     @GetMapping("/get_banks")
     @Operation(summary = "Get banks details")
-    public ResponseEntity<List<BankDTO>> getBanks() throws IOException {
+    public ResponseEntity<BankResponse> getBanks() throws IOException {
 
-        String banksJson = paystackService.getBanks();
-//
-        ObjectMapper mapper = new ObjectMapper();
-        BankResponse banks = mapper.readValue(banksJson, BankResponse.class);
+        BankResponse banksJson = paystackService.getBanks();
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(banksJson);
+    }
 
+    @PostMapping("/webhook") // after using ngrok, open this "http://localhost:4040" on your browser to get the event
+    public ResponseEntity<WebhookResponse> listenToEvents(
+            @RequestBody String rawPayload,
+            @RequestHeader("x-paystack-signature") String signature) {
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(banks.getData());
-//
+                .body(paystackService.handleWebhook(rawPayload, signature));
     }
 }
 
